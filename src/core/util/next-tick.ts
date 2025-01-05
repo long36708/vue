@@ -15,7 +15,7 @@ export let isUsingMicroTask = false
 
 // callbacks用来存放我们需要异步执行的函数队列，
 const callbacks: Array<Function> = []
-// pending用来标记是否已经命令callbacks在下个tick全部执行，防止多次调用。
+// pending用来标记是否已经命令callbacks在下个tick全部执行，防止多次调用。标识是否正在执行回调函数
 let pending = false
 
 function flushCallbacks() {
@@ -47,6 +47,7 @@ function flushCallbacks() {
 // where microtasks have too high a priority and fire in between supposedly
 // sequential events (e.g. #4521, #6690, which have workarounds)
 // or even between bubbling of the same event (#6566).
+// 用来触发执行回调函数
 let timerFunc
 
 /**
@@ -134,6 +135,9 @@ export function nextTick<T>(this: T, cb: (this: T, ...args: any[]) => any): void
 export function nextTick<T>(cb: (this: T, ...args: any[]) => any, ctx: T): void
 /**
  * @internal
+ * 在 nextTick 的外层定义变量形成一个闭包，我们每次调用 $nextTick() 的过程其实就是在向 callbacks 新增回调函数的过程
+ *
+ * callbacks 新增回调函数后又执行了 timerFunc 函数，pending 标识 表示同一个时间只能执行一次。
  */
 export function nextTick(cb?: (...args: any[]) => any, ctx?: object) {
   let _resolve
